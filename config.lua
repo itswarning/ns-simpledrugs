@@ -15,3 +15,7 @@ Config.Plants = {
     vector4(2227.12, 5578.44, 53.86, 120.0),
     vector4(2221.94, 5579.21, 53.80, 250.0)
 }
+
+-- Other
+Config.Logging = true -- enable or disable webhook logging
+Config.WebHookURL = 'WEBHOOK_URL_HERE' -- Webhook for logging purposes

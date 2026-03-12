@@ -55,6 +55,13 @@ local function spawnPlant(id, data)
                         spawnPlant(id, data)
                     end)
                 end
+                if Config.Logging then
+                    TriggerServerEvent('ns-simpledrugs:logHarvest', id, {
+                        name = GetPlayerName(PlayerId()),
+                        id = PlayerId()
+                    })
+                end
+
                 isHarvesting = false
             end
         }
