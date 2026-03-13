@@ -102,9 +102,6 @@ RegisterNetEvent('ns-simpledrugs:harvestPlant', function(drugKey, plantId, clien
 
     local drug = Config.Drugs[drugKey]
     if not drug then return end
-
-    getData(src, function(data) end)
-
     -- distance check to prevent exploit
     local ped = GetPlayerPed(src)
     local pedCoords = GetEntityCoords(ped)

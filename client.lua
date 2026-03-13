@@ -19,9 +19,12 @@ local function spawnPlant(drugKey, id, data, drug)
     lib.requestModel(drug.PlantModel)
     local coords = vec3(data.x, data.y, data.z)
 
+    local r = (drug.Radius or 5.0) * math.sqrt(math.random())
+    local theta = math.random() * math.pi * 2
+
     local newCoords = vector3(
-        coords.x + math.random() * 5,
-        coords.y + math.random() * 5,
+        coords.x + r * math.cos(theta),
+        coords.y + r * math.cos(theta),
         coords.z
     )
 
@@ -59,7 +62,7 @@ local function spawnPlant(drugKey, id, data, drug)
 
                 if ok then
                     -- give item to player once harvested (s-side is authorative)
-                    TriggerServerEvent('ns-simpledrugs:harvestPlant', drugKey, id, coords)
+                    TriggerServerEvent('ns-simpledrugs:harvestPlant', drugKey, id, newCoords)
 
                     -- remove prop locally
                     DeleteEntity(plant)
