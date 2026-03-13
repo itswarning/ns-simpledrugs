@@ -96,9 +96,13 @@ RegisterNetEvent('ns-simpledrugs:requestData', function()
     end)
 end)
 
-RegisterNetEvent('ns-simpledrugs:harvestPlant', function(plantId, clientCoords)
+RegisterNetEvent('ns-simpledrugs:harvestPlant', function(drugKey, plantId, clientCoords)
     local src = source
     if not src then return end
+
+    local drug = Config.Drugs[drugKey]
+    if not drug then return end
+
     getData(src, function(data) end)
 
     -- distance check to prevent exploit
@@ -108,7 +112,7 @@ RegisterNetEvent('ns-simpledrugs:harvestPlant', function(plantId, clientCoords)
         return
     end
 
-    local added = exports.ox_inventory:AddItem(src, Config.HarvestItem, Config.HarvestAmount)
+    local added = exports.ox_inventory:AddItem(src, drug.HarvestItem, drug.HarvestAmount)
     if not added then
         TriggerClientEvent('ox_lib:notify', src, {
             title = 'Inventory',

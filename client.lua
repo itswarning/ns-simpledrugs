@@ -1,4 +1,4 @@
-local spawnedPlants = {}
+local spawnedPlants = {} -- spawnedPlants[drugkey][plantID] = entity
 local isHarvesting = false
 
 -- stats
@@ -9,33 +9,40 @@ local xpData = {
 }
 TriggerServerEvent('ns-simpledrugs:requestData')
 
-local function spawnPlant(id, data)
-    if spawnedPlants[id] and DoesEntityExist(spawnedPlants[id]) then
+local function spawnPlant(drugKey, id, data, drug)
+    spawnedPlants[drugKey] = spawnedPlants[drugKey] or {}
+    if spawnedPlants[drugKey][id] and DoesEntityExist(spawnedPlants[drugKey][id]) then
         return
     end
 
     -- get the model so the game has it loaded before CreatObject
-    lib.requestModel(Config.PlantModel)
+    lib.requestModel(drug.PlantModel)
     local coords = vec3(data.x, data.y, data.z)
 
+    local newCoords = vector3(
+        coords.x + math.random() * 5,
+        coords.y + math.random() * 5,
+        coords.z
+    )
+
     -- make the plant prop locally and freeze it in place
-    local plant = CreateObject(Config.PlantModel, coords.x, coords.y, coords.z - 1, false, false, false)
+    local plant = CreateObject(drug.PlantModel, newCoords.x, newCoords.y, newCoords.z - 1, false, false, false)
     SetEntityHeading(plant, data.w)
     FreezeEntityPosition(plant, true)
     SetEntityAsMissionEntity(plant, true, true)
 
-    spawnedPlants[id] = plant
+    spawnedPlants[drugKey][id] = plant
 
     exports.ox_target:addLocalEntity(plant, {
         {
-            label = Config.TargetLabel,
-            icon = Config.TargetIcon,
+            label = drug.TargetLabel,
+            icon = drug.TargetIcon,
             onSelect = function()
                 if isHarvesting then return end
                 isHarvesting = true
 
                 local ok = lib.progressCircle({
-                    duration = Config.HarvestTimeMs,
+                    duration = drug.HarvestTimeMs,
                     position = 'bottom',
                     useWhileDead = false,
                     canCancel = true,
@@ -52,21 +59,22 @@ local function spawnPlant(id, data)
 
                 if ok then
                     -- give item to player once harvested (s-side is authorative)
-                    TriggerServerEvent('ns-simpledrugs:harvestPlant', id, coords)
+                    TriggerServerEvent('ns-simpledrugs:harvestPlant', drugKey, id, coords)
 
                     -- remove prop locally
                     DeleteEntity(plant)
-                    spawnedPlants[id] = nil
+                    spawnedPlants[drugKey][id] = nil
 
                     -- respawn after a delay
-                    SetTimeout(Config.RespawnTimeMs, function()
-                        spawnPlant(id, data)
+                    SetTimeout(drug.RespawnTimeMs, function()
+                        spawnPlant(drugKey, id, data, drug)
                     end)
                 end
                 if Config.Logging then
                     TriggerServerEvent('ns-simpledrugs:logHarvest', id, {
                         name = GetPlayerName(PlayerId()),
-                        id = PlayerId()
+                        id = PlayerId(),
+                        drug = drugKey
                     })
                 end
 
@@ -78,10 +86,22 @@ end
 
 -- spawn all plants from the config on client start
 CreateThread(function()
-    for i = 1, #Config.Plants do
-        spawnPlant(i, Config.Plants[i])
+    for drugKey, drug in pairs(Config.Drugs) do
+        for i = 1, drug.Count do
+            spawnPlant(drugKey, i, drug.Position, drug)
+        end
     end
 end)
+
+RegisterCommand('removePlants', function()
+    for drugKey, plants in pairs(spawnedPlants) do
+        for id, plant in pairs(plants) do
+            if DoesEntityExist(plant) then
+                DeleteEntity(plant)
+            end
+        end
+    end
+end, false)
 
 -- draw a marker above each plant pos
 --[[
