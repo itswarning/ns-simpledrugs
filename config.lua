@@ -17,5 +17,5 @@ Config.Plants = {
 }
 
 -- Other
-Config.Logging = true -- enable or disable webhook logging
+Config.Logging = false -- enable or disable webhook logging
 Config.WebHookURL = 'WEBHOOK_URL_HERE' -- Webhook for logging purposes

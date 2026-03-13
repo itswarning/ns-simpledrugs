@@ -1,6 +1,14 @@
 local spawnedPlants = {}
 local isHarvesting = false
 
+-- stats
+local xpData = {
+    xp = 0,
+    level = 1,
+    needed = 100
+}
+TriggerServerEvent('ns-simpledrugs:requestData')
+
 local function spawnPlant(id, data)
     if spawnedPlants[id] and DoesEntityExist(spawnedPlants[id]) then
         return
@@ -76,6 +84,7 @@ CreateThread(function()
 end)
 
 -- draw a marker above each plant pos
+--[[
 CreateThread(function ()
     while true do
         Wait(0)
@@ -92,4 +101,50 @@ CreateThread(function ()
             )
         end
     end
+end)
+]]--
+
+
+-- NetEvents
+RegisterNetEvent('ns-simpledrugs:xpUpdated', function(data)
+    lib.notify({
+        title = 'Harvested',
+        description = ('+%d XP | Level %d (%d XP)'):format(data.gained, data.level, data.xp),
+        type = 'success'
+    })
+end)
+
+-- Commands
+RegisterCommand('drugxp', function()
+    local progress = math.floor((xpData.xp / xpData.needed) * 100)
+    print(('Level: %d | XP: %d/%d (%d%%)'):format(xpData.level, xpData.xp, xpData.needed, progress))
+
+    lib.registerContext({
+        id = "drugxp_menu",
+        title = "Drug XP",
+        options = {
+            {
+                title = ('Level / XP'),
+                description = ('Level: %d | XP: %d/%d (%d%%)'):format(xpData.level, xpData.xp, xpData.needed, progress),
+                progress = progress
+            }
+        }
+    })
+
+    lib.showContext('drugxp_menu')
+end, false)
+
+RegisterNetEvent('ns-simpledrugs:receiveData', function(xp, level, needed)
+    --[[
+        lib.notify({
+            title = 'Drug XP',
+            description = ('Level: %d | XP: %d/%d'):format(level, xp, needed),
+            type = 'inform'
+        })
+    ]]--
+    xpData = {
+        xp = xp,
+        level = level,
+        needed = needed
+    }
 end)
